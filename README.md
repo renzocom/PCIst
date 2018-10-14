@@ -9,6 +9,7 @@ from PCIst import **
 par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100}
 PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **par)
 ```
+For more information on using the library please refer to the Supporting Information of the paper cited below.
 ## Credit
 **Please cite this paper if you use this code:**
 
