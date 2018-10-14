@@ -9,3 +9,8 @@ from PCIst import **
 par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100}
 PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **par)
 ```
+## Credit
+**Please cite this paper if you use this code:**
+Comolatti et al., "A fast and general method to empirically estimate the complexity of distributed causal interactions in the brain" (to be submitted)
+
+Correspondance regarding the code can be directed to renzo.com@gmail.com 
