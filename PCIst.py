@@ -319,8 +319,10 @@ def dimension_embedding(x, L, tau):
     return s
 
 ## PREPROCESS
-def preprocess_signal(signal_evk, times, time_window, baseline_corr=False, resample=None, **kwargs):
+def preprocess_signal(signal_evk, times, time_window, baseline_corr=False, resample=None,avgref=False, **kwargs):
     assert signal_evk.shape[1] == len(times), 'Signal and Time arrays must be of the same size.'
+    if avgref:
+        signal_evk = avgreference(signal_evk)
     if baseline_corr:
         signal_evk = baseline_correct(signal_evk, times, delta=-50)
     t_ini, t_end = time_window
@@ -331,6 +333,12 @@ def preprocess_signal(signal_evk, times, time_window, baseline_corr=False, resam
     if resample:
         signal_evk, times = undersample_signal(signal_evk, times, new_fs=resample)
     return signal_evk, times
+
+def avgreference(Y):
+    newY = np.zeros(Y.shape)
+    channels_mean = np.mean(Y,axis=0)[np.newaxis] 
+    newY = Y - channels_mean
+    return newY
 
 def undersample_signal(signal, times, new_fs):
     '''
