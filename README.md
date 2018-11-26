@@ -1,4 +1,4 @@
-# PCI^{ST}
+# PCI<sup>ST</sup>
 A short library for calculating the state transitions Perturbational Complexity Index (PCI<sup>ST</sup>).
 
 The main function of the library is `calc_PCIst()`, which  is composed of two functions corresponding to the two steps involved is the computation of PCI<sup>ST</sup>: `dimensionality reduction()` and `state_transition_quantification()`.
