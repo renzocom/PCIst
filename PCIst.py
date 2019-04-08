@@ -12,7 +12,7 @@ from numpy import linalg
 import scipy.signal
 
 
-def calc_PCIst(signal_evk, times, **par):
+def calc_PCIst(signal_evk, times, full_return=False, **par):
     ''' Calculates PCIst (Perturbational Complexity Index based on State transitions) of a signal.
     Parameters
     ----------
@@ -40,7 +40,9 @@ def calc_PCIst(signal_evk, times, **par):
     signal_svd, eigenvalues = dimensionality_reduction(signal_evk, times, **par)
     results = state_transition_quantification(signal_svd, times, **par)
 
-    return results
+    if full_return:
+        return {**results, 'signal_svd':signal_svd, 'eigenvalues':eigenvalues}
+    return results['PCI'], results['PCI_bydim']
 
 ## DIMENSIONALITY REDUCTION
 def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_snr=1.1,
@@ -100,7 +102,7 @@ def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_s
             snrs[c] = np.sqrt(np.divide(resp_power, base_power))
         signal_svd = signal_svd[snrs > min_snr, :]
 
-    return signal_svd, eigenvalues
+    return signal_svd, eigenvalues[:signal_svd.shape[0]]
 
 
 def get_svd(signal_evk, times, response_window, n_components):
@@ -228,7 +230,9 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
     T_resp = temp
     T_base = temp2
 
-    return PCI, PCI_bydim
+    return {'PCI':PCI, 'PCI_bydim':PCI_bydim, 'n_dims':n_dims,
+    'D_base':D_base, 'D_resp':D_resp, 'T_base':T_base,'T_resp':T_resp,
+    'thresholds':thresholds, 'NST_diff':NST_diff, 'NST_resp':NST_resp, 'NST_base':NST_base,'max_thresholds':max_thresholds}
 
 
 def recurrence_matrix(signal, mode, thr=None):
