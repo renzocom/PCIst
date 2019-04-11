@@ -8,12 +8,12 @@ The main function of the library is `calc_PCIst()`, which  is composed of two fu
 ```python
 from PCIst import **
 par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100}
-PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **par)
+pci = calc_PCIst(signal_evoked, times, **par)
 ```
 **SPES/SEEG**
 ```python
 par = {'baseline_window':(-250,-50), 'response_window':(10,600), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100, 'avgref': False}
-PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **par)
+pci = calc_PCIst(signal_evoked, times, **par)
 ```
 
 ## Credit
