@@ -7,7 +7,11 @@
 # started: 26/10/2017
 # last update: 08/04/2019
 
+<<<<<<< HEAD
 # DEVELOP CHANGE
+=======
+# DEVELOP CHANGEEE
+>>>>>>> develop
 
 import numpy as np
 from numpy import linalg
