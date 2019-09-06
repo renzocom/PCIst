@@ -36,8 +36,9 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     -------
     float
         PCIst value
-    np.ndarray
-        List containing component wise PCIst value (dNSTn).
+    OR (if full_return==True)
+    dict
+        Dictionary containing all variables from calculation including array 'dNSTn' with PCIst decomposition.
     '''
     signal_evk, times = preprocess_signal(signal_evk, times, (par['baseline_window'][0],
                                                               par['response_window'][1]), **par)
