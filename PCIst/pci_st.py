@@ -48,7 +48,8 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     PCI = np.sum(STQ['dNST'])
 
     if full_return:
-        return {'PCI':PCI, **STQ, 'signal_evk':signal_evk, 'times':times, 'signal_svd':signal_svd, 'eigenvalues':eigenvalues, 'var_exp':var_exp, 'snrs':snrs}
+        return {'PCI':PCI, **STQ, 'signal_evk':signal_evk, 'times':times, 'signal_svd':signal_svd,
+                'eigenvalues':eigenvalues, 'var_exp':var_exp, 'snrs':snrs}
     return PCI
 
 ## DIMENSIONALITY REDUCTION
