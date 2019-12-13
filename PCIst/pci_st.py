@@ -57,7 +57,7 @@ def calc_PCIst(evoked, times, full_return=False, **params):
     return PCI
 
 ## DIMENSIONALITY REDUCTION
-def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_snr=1.1,
+def dimensionality_reduction(signal, times, response_window, max_var=99, min_snr=1.1,
                              n_components=None, **kwargs):
     '''Returns principal components of signal according to SVD of the response.
 
@@ -102,17 +102,6 @@ def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_s
 
     signal_svd = signal_svd[:max_dim, :]
 
-    # if min_snr:
-        # base_ini_ix = get_time_index(times, kwargs['baseline_window'][0])
-        # base_end_ix = get_time_index(times, kwargs['baseline_window'][1])
-        # resp_ini_ix = get_time_index(times, response_window[0])
-        # resp_end_ix = get_time_index(times, response_window[1])
-        # n_dims = np.size(signal_svd, 0)
-        # snrs = np.zeros(n_dims)
-        # for c in range(n_dims):
-        #     resp_power = np.mean(np.square(signal_svd[c, resp_ini_ix:resp_end_ix]))
-        #     base_power = np.mean(np.square(signal_svd[c, base_ini_ix:base_end_ix]))
-        #     snrs[c] = np.sqrt(np.divide(resp_power, base_power))
     snrs = calc_snr(signal_svd, times, kwargs['baseline_window'], response_window)
     signal_svd = signal_svd[snrs > min_snr, :]
     snrs = snrs[snrs > min_snr]
@@ -121,24 +110,37 @@ def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_s
 
     return signal_svd, var_exp[:Nc], eigenvalues, snrs
 
+def trim_signal(signal, times, window):
+    '''Trim signal to time window.
+    
+    Parameters
+    ----------
+    signal : ndarray (..., n_times)
+    times : 1d array (n_times,)
+    window : tuple (ini_t, end_t)
+
+    Returns
+    -------
+    ndarray with trimmed signal.
+    '''
+
+    ini_ix, end_ix = time2ix(times, window)
+    return signal[..., ini_ix:end_ix]
+
 def calc_snr(signal_svd, times, baseline_window, response_window):
+    resp_svd = trim_signal(signal_svd, times, response_window)
+    base_svd = trim_signal(signal_svd, times, baseline_window)
 
-    base_ini_ix = get_time_index(times, baseline_window[0])
-    base_end_ix = get_time_index(times, baseline_window[1])
-    resp_ini_ix = get_time_index(times, response_window[0])
-    resp_end_ix = get_time_index(times, response_window[1])
-
-    resp_power = np.mean(np.square(signal_svd[:,resp_ini_ix:resp_end_ix]), axis=1)
-    base_power = np.mean(np.square(signal_svd[:,base_ini_ix:base_end_ix]), axis=1)
+    resp_power = np.mean(np.square(resp_svd), axis=1)
+    base_power = np.mean(np.square(base_svd), axis=1)
     snrs = np.sqrt(resp_power / base_power)
     return snrs
 
 def get_svd(evoked, times, response_window, n_components):
-    ini_t, end_t = response_window
-    ini_ix = get_time_index(times, onset=ini_t)
-    end_ix = get_time_index(times, onset=end_t)
-    signal_resp = evoked[:, ini_ix:end_ix].T
-    U, S, V = linalg.svd(signal_resp, full_matrices=False)
+    ''' Get svd basis and eigenvalues from evoked response. '''
+
+    evoked_resp = trim_signal(evoked, times, response_window)
+    _, S, V = linalg.svd(evoked_resp.T, full_matrices=False)
     V = V.T
     Vk = V[:, :n_components]
     eigenvalues = S[:n_components]
@@ -205,10 +207,10 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
         signal = signal[:, np.newaxis, :]
 
     # BASELINE AND RESPONSE DEFINITION
-    base_ini_ix = get_time_index(times, baseline_window[0])
-    base_end_ix = get_time_index(times, baseline_window[1])
-    resp_ini_ix = get_time_index(times, response_window[0])
-    resp_end_ix = get_time_index(times, response_window[1])
+    base_ini_ix = time2ix(times, baseline_window[0])
+    base_end_ix = time2ix(times, baseline_window[1])
+    resp_ini_ix = time2ix(times, response_window[0])
+    resp_end_ix = time2ix(times, response_window[1])
     n_baseline = len(times[base_ini_ix:base_end_ix])
     n_response = len(times[resp_ini_ix:resp_end_ix])
 
@@ -374,8 +376,8 @@ def preprocess_signal(evoked, times, time_window, baseline_corr=False, resample=
     if baseline_corr:
         evoked = baseline_correct(evoked, times, delta=-50)
     t_ini, t_end = time_window
-    ini_ix = get_time_index(times, t_ini)
-    end_ix = get_time_index(times, t_end)
+    ini_ix = time2ix(times, t_ini)
+    end_ix = time2ix(times, t_end)
     evoked = evoked[:, ini_ix:end_ix]
     times = times[ini_ix:end_ix]
     if resample:
@@ -402,7 +404,7 @@ def undersample_signal(signal, times, new_fs):
 def baseline_correct(Y, times, delta=0):
     ''' Baseline correct signal using times < delta '''
     newY = np.zeros(Y.shape)
-    onset_ix = get_time_index(times, delta)
+    onset_ix = time2ix(times, delta)
     baseline_mean = np.mean(Y[:, :onset_ix], axis=1)[np.newaxis]
     newY = Y - baseline_mean.T
     close_enough = np.all(np.isclose(np.mean(newY[:, :onset_ix], axis=1), 0, atol=1e-08))

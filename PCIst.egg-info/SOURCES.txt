@@ -1,0 +1,9 @@
+README.md
+setup.py
+PCIst/__init__.py
+PCIst/pci_st.py
+PCIst/pci_tools.py
+PCIst.egg-info/PKG-INFO
+PCIst.egg-info/SOURCES.txt
+PCIst.egg-info/dependency_links.txt
+PCIst.egg-info/top_level.txt
