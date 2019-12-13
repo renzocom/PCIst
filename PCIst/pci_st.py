@@ -39,6 +39,10 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     np.ndarray
         List containing component wise PCIst value (dNSTn).
     '''
+    if np.any(np.isnan(signal_evk)):
+        print('Data contains nan values.')
+        return 0
+
     signal_evk, times = preprocess_signal(signal_evk, times, (par['baseline_window'][0],
                                                               par['response_window'][1]), **par)
     signal_svd, var_exp, eigenvalues, snrs = dimensionality_reduction(signal_evk, times, **par)
@@ -242,6 +246,7 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
     ixs = np.argmax(NST_diff, axis=0)
     max_thresholds = np.array([thresholds[ix, i] for ix, i in zip(ixs, range(n_dims))])
     dNST = np.array([NST_diff[ix, i] for ix, i in zip(ixs, range(n_dims))]) * n_response
+    dNST = [x if x>0 else 0 for x in dNST]
 
     temp = np.zeros((n_dims, n_response, n_response))
     temp2 = np.zeros((n_dims, n_baseline, n_baseline))
