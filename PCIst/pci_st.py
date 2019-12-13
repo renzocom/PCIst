@@ -36,8 +36,9 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     -------
     float
         PCIst value
-    np.ndarray
-        List containing component wise PCIst value (dNSTn).
+    OR (if full_return==True)
+    dict
+        Dictionary containing all variables from calculation including array 'dNSTn' with PCIst decomposition.
     '''
     if np.any(np.isnan(signal_evk)):
         print('Data contains nan values.')
@@ -51,7 +52,8 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     PCI = np.sum(STQ['dNST'])
 
     if full_return:
-        return {'PCI':PCI, **STQ, 'signal_evk':signal_evk, 'times':times, 'signal_svd':signal_svd, 'eigenvalues':eigenvalues, 'var_exp':var_exp, 'snrs':snrs}
+        return {'PCI':PCI, **STQ, 'signal_evk':signal_evk, 'times':times, 'signal_svd':signal_svd,
+                'eigenvalues':eigenvalues, 'var_exp':var_exp, 'snrs':snrs}
     return PCI
 
 ## DIMENSIONALITY REDUCTION
