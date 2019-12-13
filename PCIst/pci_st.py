@@ -14,23 +14,23 @@ from numpy import linalg
 import scipy.signal
 
 
-def calc_PCIst(signal_evk, times, full_return=False, **par):
+def calc_PCIst(evoked, times, full_return=False, **params):
     ''' Calculates PCIst (Perturbational Complexity Index based on State transitions) of a signal.
     Parameters
     ----------
-    signal_evk : ndarray
+    evoked : ndarray
         2D array (ch, times) containing signal.
     times : ndarray
         1D array (time,) containing timepoints (negative values are baseline).
     full_return : bool
         Returns multiple variables involved in PCI computation.
-    **pars : dictionary
+    **params : dictionary
         Dictionary containing parameters (see dimensionality_reduction(),
         state_transition_quantification()and preprocess_signal() documentation).
         Example:
-        >> par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1,
+        >> params = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1,
         'max_var':99, 'embed':False,'n_steps':100}
-        >> PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **par)
+        >> PCIst, PCIst_bydim = calc_PCIst(signal_evoked, times, **params)
 
     Returns
     -------
@@ -40,19 +40,19 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     dict
         Dictionary containing all variables from calculation including array 'dNSTn' with PCIst decomposition.
     '''
-    if np.any(np.isnan(signal_evk)):
+    if np.any(np.isnan(evoked)):
         print('Data contains nan values.')
         return 0
 
-    signal_evk, times = preprocess_signal(signal_evk, times, (par['baseline_window'][0],
-                                                              par['response_window'][1]), **par)
-    signal_svd, var_exp, eigenvalues, snrs = dimensionality_reduction(signal_evk, times, **par)
-    STQ = state_transition_quantification(signal_svd, times, **par)
+    evoked, times = preprocess_signal(evoked, times, (params['baseline_window'][0],
+                                                              params['response_window'][1]), **params)
+    signal_svd, var_exp, eigenvalues, snrs = dimensionality_reduction(evoked, times, **params)
+    STQ = state_transition_quantification(signal_svd, times, **params)
 
     PCI = np.sum(STQ['dNST'])
 
     if full_return:
-        return {'PCI':PCI, **STQ, 'signal_evk':signal_evk, 'times':times, 'signal_svd':signal_svd,
+        return {'PCI':PCI, **STQ, 'evoked':evoked, 'times':times, 'signal_svd':signal_svd,
                 'eigenvalues':eigenvalues, 'var_exp':var_exp, 'snrs':snrs}
     return PCI
 
@@ -133,11 +133,11 @@ def calc_snr(signal_svd, times, baseline_window, response_window):
     snrs = np.sqrt(resp_power / base_power)
     return snrs
 
-def get_svd(signal_evk, times, response_window, n_components):
+def get_svd(evoked, times, response_window, n_components):
     ini_t, end_t = response_window
     ini_ix = get_time_index(times, onset=ini_t)
     end_ix = get_time_index(times, onset=end_t)
-    signal_resp = signal_evk[:, ini_ix:end_ix].T
+    signal_resp = evoked[:, ini_ix:end_ix].T
     U, S, V = linalg.svd(signal_resp, full_matrices=False)
     V = V.T
     Vk = V[:, :n_components]
@@ -366,21 +366,21 @@ def dimension_embedding(x, L, tau):
     return s
 
 ## PREPROCESS
-def preprocess_signal(signal_evk, times, time_window, baseline_corr=False, resample=None,
+def preprocess_signal(evoked, times, time_window, baseline_corr=False, resample=None,
                       avgref=False, **kwargs):
-    assert signal_evk.shape[1] == len(times), 'Signal and Time arrays must be of the same size.'
+    assert evoked.shape[1] == len(times), 'Signal and Time arrays must be of the same size.'
     if avgref:
-        signal_evk = avgreference(signal_evk)
+        evoked = avgreference(evoked)
     if baseline_corr:
-        signal_evk = baseline_correct(signal_evk, times, delta=-50)
+        evoked = baseline_correct(evoked, times, delta=-50)
     t_ini, t_end = time_window
     ini_ix = get_time_index(times, t_ini)
     end_ix = get_time_index(times, t_end)
-    signal_evk = signal_evk[:, ini_ix:end_ix]
+    evoked = evoked[:, ini_ix:end_ix]
     times = times[ini_ix:end_ix]
     if resample:
-        signal_evk, times = undersample_signal(signal_evk, times, new_fs=resample)
-    return signal_evk, times
+        evoked, times = undersample_signal(evoked, times, new_fs=resample)
+    return evoked, times
 
 def avgreference(signal):
     ''' Performs average reference to signal. '''
@@ -396,8 +396,8 @@ def undersample_signal(signal, times, new_fs):
     new_fs : [hz]
     '''
     n_samples = int((times[-1]-times[0])/1000 * new_fs)
-    new_signal_evk, new_times = scipy.signal.resample(signal, n_samples, t=times, axis=1)
-    return new_signal_evk, new_times
+    new_evoked, new_times = scipy.signal.resample(signal, n_samples, t=times, axis=1)
+    return new_evoked, new_times
 
 def baseline_correct(Y, times, delta=0):
     ''' Baseline correct signal using times < delta '''
@@ -414,3 +414,26 @@ def get_time_index(times, onset=0):
     first non-negative time.
     '''
     return np.sum(times < onset)
+
+
+def time2ix(times, t):
+    ''' Returns index of the timepoint in `times` closest to `t`.
+
+    Parameters
+    ----------
+    times : 1d array
+        Refere
+
+    t : float or 1d array
+
+    Returns
+    -------
+    Index(es) of closest timepoint(s).
+    '''
+
+    def aux(times, t):
+        return np.abs(np.array(times) - t).argmin()
+
+    if hasattr(t, '__iter__'):
+        return np.array([aux(times, tt) for tt in t])
+    return aux(times, t)
