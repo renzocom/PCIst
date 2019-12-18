@@ -286,40 +286,29 @@ def recurrence_matrix(signal, mode, thr=None):
     '''
     if len(signal.shape) == 1:
         signal = signal[np.newaxis, :]
-    n_dims = signal.shape[0]
-    n_times = signal.shape[1]
+    n_dims, n_times = signal.shape
 
-    R = np.zeros((n_dims, n_times, n_times))
+    D = np.zeros((n_dims, n_times, n_times))
     for i in range(n_dims):
-        D = np.tile(signal[i, :], (n_times, 1))
-        D = D - D.T
-        R[i, :, :] = D
-    R = np.linalg.norm(R, ord=2, axis=0)
+        tmp = np.tile(signal[i, :], (n_times, 1))
+        tmp = tmp - tmp.T
+        D[i, :, :] = tmp
+    D = np.linalg.norm(D, ord=2, axis=0) # (n_dims, n_times, n_times) --> (n_times, n_times)
 
-    mask = (R <= thr) if thr else np.zeros(R.shape).astype(bool)
+    mask = (D <= thr) if thr is not None else np.zeros(D.shape).astype(bool)
+    
     if mode == 'distance':
-        R[mask] = 0
-        return R
+        D[mask] = 0
+        return D
     if mode == 'recurrence':
         return mask.astype(int)
     if mode == 'transition':
         return diff_matrix(mask.astype(int), symmetric=False)
     return 0
 
-def distance2transition(dist_R, thr):
-    ''' Receives 2D distance matrix and calculates transition matrix. '''
-    mask = dist_R <= thr
-    R = diff_matrix(mask.astype(int), symmetric=False)
-    return R
-
-def distance2recurrence(dist_R, thr):
-    ''' Receives 2D distance matrix and calculates recurrence matrix. '''
-    mask = dist_R <= thr
-    return mask.astype(int)
-
 def diff_matrix(A, symmetric=False):
     B = np.abs(np.diff(A))
-    if B.shape[1] != B.shape[0]:
+    if B.shape[1] != B.shape[0]: # Make into square matrix
         B2 = np.zeros((B.shape[0], B.shape[1]+1))
         B2[:, :-1] = B
         B = B2
@@ -327,6 +316,17 @@ def diff_matrix(A, symmetric=False):
         B = (B + B.T)
         B[B > 0] = 1
     return B
+
+def distance2transition(D, thr):
+    ''' Receives 2D distance matrix and calculates transition matrix. '''
+    mask = D <= thr
+    T = diff_matrix(mask.astype(int), symmetric=False)
+    return T
+
+def distance2recurrence(D, thr):
+    ''' Receives 2D distance matrix and calculates recurrence matrix. '''
+    R = D <= thr
+    return R.astype(int)
 
 def calc_maxdim(eigenvalues, max_var):
     ''' Get number of dimensions that accumulates at least `max_var`% of total variance'''
