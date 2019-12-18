@@ -47,7 +47,13 @@ def calc_PCIst(evoked, times, full_return=False, **params):
     evoked, times = preprocess_signal(evoked, times, (params['baseline_window'][0],
                                                               params['response_window'][1]), **params)
     signal_svd, var_exp, eigenvalues, snrs = dimensionality_reduction(evoked, times, **params)
-    STQ = state_transition_quantification(signal_svd, times, **params)
+
+
+    if signal_svd.shape[0] == 0:
+        print('No components --> PCIst=0')
+        STQ =  {'dNST':np.array([]), 'n_dims':0}
+    else:
+        STQ = state_transition_quantification(signal_svd, times, **params)
 
     PCI = np.sum(STQ['dNST'])
 
@@ -188,11 +194,10 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
     ndarray
         List containing component wise PCIst value (∆NSTn).
     '''
+    if len(signal.shape) == 1:
+        signal = signal[np.newaxis, :]
 
     n_dims = signal.shape[0]
-    if n_dims == 0:
-        print('No components --> PCIst=0')
-        return {'dNST':np.array([]), 'n_dims':0}
 
     # EMBEDDING
     if embed:
@@ -207,18 +212,15 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
         signal = signal[:, np.newaxis, :]
 
     # BASELINE AND RESPONSE DEFINITION
-    base_ini_ix = time2ix(times, baseline_window[0])
-    base_end_ix = time2ix(times, baseline_window[1])
-    resp_ini_ix = time2ix(times, response_window[0])
-    resp_end_ix = time2ix(times, response_window[1])
-    n_baseline = len(times[base_ini_ix:base_end_ix])
-    n_response = len(times[resp_ini_ix:resp_end_ix])
+
+    baseline = trim_signal(signal, times, baseline_window)
+    response = trim_signal(signal, times, response_window)
+
+    n_baseline = baseline.shape[-1]
+    n_response = response.shape[-1]
 
     if n_response <= 1 or n_baseline <= 1:
         print('Warning: Bad time interval defined.')
-
-    baseline = signal[:, :, base_ini_ix:base_end_ix]
-    response = signal[:, :, resp_ini_ix:resp_end_ix]
 
     # NST CALCULATION
         # Distance matrix
@@ -237,6 +239,7 @@ def state_transition_quantification(signal, times, k, baseline_window, response_
         min_thr = np.median(D_base[i, :, :].flatten())
         max_thr = np.max(D_resp[i, :, :].flatten()) * max_thr_p
         thresholds[:, i] = np.linspace(min_thr, max_thr, n_steps)
+        
     for i in range(n_steps):
         for j in range(n_dims):
             T_base[i, j, :, :] = distance2transition(D_base[j, :, :], thresholds[i, j])
@@ -286,6 +289,7 @@ def recurrence_matrix(signal, mode, thr=None):
     '''
     if len(signal.shape) == 1:
         signal = signal[np.newaxis, :]
+
     n_dims, n_times = signal.shape
 
     D = np.zeros((n_dims, n_times, n_times))
@@ -294,16 +298,19 @@ def recurrence_matrix(signal, mode, thr=None):
         tmp = tmp - tmp.T
         D[i, :, :] = tmp
     D = np.linalg.norm(D, ord=2, axis=0) # (n_dims, n_times, n_times) --> (n_times, n_times)
-
-    mask = (D <= thr) if thr is not None else np.zeros(D.shape).astype(bool)
     
     if mode == 'distance':
-        D[mask] = 0
+        if thr is not None:
+            mask = (D <= thr)
+            D[mask] = 0
         return D
+
     if mode == 'recurrence':
-        return mask.astype(int)
+        return distance2recurrence(D, thr)
+
     if mode == 'transition':
-        return diff_matrix(mask.astype(int), symmetric=False)
+        return distance2transition(D, thr, symmetric=False)
+
     return 0
 
 def diff_matrix(A, symmetric=False):
@@ -317,10 +324,10 @@ def diff_matrix(A, symmetric=False):
         B[B > 0] = 1
     return B
 
-def distance2transition(D, thr):
+def distance2transition(D, thr, symmetric=False):
     ''' Receives 2D distance matrix and calculates transition matrix. '''
-    mask = D <= thr
-    T = diff_matrix(mask.astype(int), symmetric=False)
+    mask = (D <= thr)
+    T = diff_matrix(mask.astype(int), symmetric=symmetric)
     return T
 
 def distance2recurrence(D, thr):
