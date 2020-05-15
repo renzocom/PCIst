@@ -27,6 +27,6 @@ parameters = [];
 ## Credit
 **Please cite this paper if you use this code:**
 
-Comolatti R et al., "A fast and general method to empirically estimate the complexity of brain responses to transcranial and intracranial stimulations" Brain Stimulation (in press) https://doi.org/10.1016/j.brs.2019.05.013
+Comolatti R et al., "A fast and general method to empirically estimate the complexity of brain responses to transcranial and intracranial stimulations" Brain Stimulation (2019) https://doi.org/10.1016/j.brs.2019.05.013
 
 Correspondance regarding the code can be directed to renzo.com@gmail.com 
