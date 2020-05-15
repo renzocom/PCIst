@@ -8,17 +8,18 @@
 %stimulations" Brain Stimulation
 %https://doi.org/10.1016/j.brs.2019.05.013
 %
-%INPUTS: 
+% INPUTS: 
 % signal_evk = channels x samples
 % times = 1 x samples (in milliseconds)
 % parameters = struct (optional) - for more details see nested function
 %               "checkparameters" 
-%OUTPUTS:
+% OUTPUTS:
 % pci = PCIst value
 % dNST = PCIst decomposition
 %
 % [Authors: Renzo Comolatti and Adenauer G. Casali
-%  Developed for MatlabR2015a, last update: 12-may-2020]
+% Tested on MatlabR2015a, R2016b, R2017a and R2018a
+% Last update: 12-may-2020]
 
 function [pci,dNST,parameters]=PCIst(signal_evk,times,parameters)
 
