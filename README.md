@@ -8,7 +8,7 @@ The main function of the `python` library is `calc_PCIst()`, which  is composed 
 **TMS/EEG**
 ```python
 from pci_st import **
-par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100}
+par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100} # 
 pci = calc_PCIst(evoked, times, **par)
 ```
 **SPES/SEEG**
@@ -19,9 +19,20 @@ pci = calc_PCIst(evoked, times, **par)
 ```
 
 ### Matlab
+**TMS/EEG**
 ```matlab
-parameters = [];
+parameters = []; % Default parameters for TMS/EEG used in (Brain Stim, 2019)
 [pci,dNST] = PCIst(evoked, times, parameters)
+
+% Equivalent to:
+
+par=struct('baseline',[-400 -50],'response',[0 300],'k',1.2,'min_snr',1.1,'max_var',99,'l',1,'nsteps',100);
+[pci,dNST] = PCIst(evoked, times, par)
+```
+**SPES/SEEG**
+```matlab
+par=struct('baseline',[-250 -50],'response',[10 600],'k',1.2,'min_snr',1.1,'max_var',99,'l',1,'nsteps',100);
+[pci,dNST] = PCIst(evoked, times, par)
 ```
 
 ## Credit
