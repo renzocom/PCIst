@@ -3,7 +3,7 @@
 #
 # Please cite this paper if you use this code:
 # Comolatti R et al., "A fast and general method to empirically estimate the complexity of brain responses
-# to transcranial and intracranial stimulations" Brain Stimulation (in press)
+# to transcranial and intracranial stimulations" Brain Stimulation (2019)
 # https://doi.org/10.1016/j.brs.2019.05.013
 #
 # started: 26/10/2017
@@ -57,7 +57,7 @@ def calc_PCIst(signal_evk, times, full_return=False, **par):
     return PCI
 
 ## DIMENSIONALITY REDUCTION
-def dimensionality_reduction(signal, times, response_window, max_var=0.99, min_snr=1.1,
+def dimensionality_reduction(signal, times, response_window, max_var=99, min_snr=1.1,
                              n_components=None, **kwargs):
     '''Returns principal components of signal according to SVD of the response.
 
