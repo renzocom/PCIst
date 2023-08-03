@@ -7,15 +7,15 @@ The main function of the `python` library is `calc_PCIst()`, which  is composed 
 ### Python
 **TMS/EEG**
 ```python
-from pci_st import **
+from PCIst import pci_st
 par = {'baseline_window':(-400,-50), 'response_window':(0,300), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100} # 
-pci = calc_PCIst(evoked, times, **par)
+pci = pci_st.calc_PCIst(evoked, times, **par)
 ```
 **SPES/SEEG**
 ```python
-from pci_st import **
+from PCIst import pci_st
 par = {'baseline_window':(-250,-50), 'response_window':(10,600), 'k':1.2, 'min_snr':1.1, 'max_var':99, 'embed':False,'n_steps':100, 'avgref': False}
-pci = calc_PCIst(evoked, times, **par)
+pci = pci_st.calc_PCIst(evoked, times, **par)
 ```
 
 ### Matlab
